@@ -1,17 +1,19 @@
-name: make-short
+name: make-shorts
 
 on:
   workflow_dispatch:
-    inputs:
-      topic:
-        description: "Topic (khali chhodo = random)"
-        required: false
-        default: ""
+  schedule:
+    - cron: "30 2 * * *"   # roz subah 8:00 IST
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
+    strategy:
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        category: [motivation, corporate, health]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,12 +27,12 @@ jobs:
       - name: Make and send short
         run: python main.py
         env:
+          CATEGORY: ${{ matrix.category }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-          TOPIC: ${{ github.event.inputs.topic }}
       - name: Keep copy
         uses: actions/upload-artifact@v4
         with:
-          name: short
+          name: short-${{ matrix.category }}
           path: out.mp4

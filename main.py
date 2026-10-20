@@ -8,8 +8,8 @@ KEY = os.getenv("GEMINI_API_KEY", "")
 TG_TOKEN = os.getenv("TG_TOKEN", "")
 TG_CHAT = os.getenv("TG_CHAT_ID", "")
 MOCK = os.getenv("MOCK") == "1"
-TEXT_MODEL = os.getenv("TEXT_MODEL", "gemini-2.5-flash")
-TTS_MODEL = os.getenv("TTS_MODEL", "gemini-2.5-flash-preview-tts")
+TEXT_MODEL = os.getenv("TEXT_MODEL", "gemini-3.8-flash")
+TTS_MODEL = os.getenv("TTS_MODEL", "gemini-3.8-flash-tts")
 VOICES = {"M": os.getenv("VOICE_M", "Fenrir"), "F": os.getenv("VOICE_F", "Kore")}
 EDGE = {"M": "hi-IN-MadhurNeural", "F": "hi-IN-SwaraNeural"}
 SR = 24000
@@ -89,9 +89,7 @@ Sirf JSON do: {{"title":"","caption":"","lines":[{{"spk":"M","scene":"fall","tex
 
 # ---------- Voice ----------
 def tts_gemini(text, spk, path):
-    style = ("Say this in a warm, energetic, emotional Hinglish voice, like a motivational "
-             "short video narrator, natural Indian pronunciation: ")
-    body = {"contents": [{"parts": [{"text": style + text}]}],
+    body = {"contents": [{"parts": [{"text": text}]}],
             "generationConfig": {"responseModalities": ["AUDIO"],
                                  "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": VOICES[spk]}}}}}
     j = gpost(TTS_MODEL, body)

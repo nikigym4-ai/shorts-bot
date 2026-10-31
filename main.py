@@ -1,6 +1,36 @@
 import os, json, re, math, base64, wave, random, subprocess, time, datetime
 import numpy as np
 import requests
+# ---- Gemini auto-retry + fallback patch ----
+import time, re
+_orig_post = requests.post
+
+def _patched_post(url, *args, **kwargs):
+    if "generativelanguage.googleapis.com" not in str(url):
+        return _orig_post(url, *args, **kwargs)
+    kwargs["timeout"] = 60
+    models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"]
+    last = None
+    for attempt in range(4):
+        for m in models:
+            u = re.sub(r"models/[^:/?]+", "models/" + m, str(url))
+            try:
+                r = _orig_post(u, *args, **kwargs)
+                if r.status_code == 200:
+                    return r
+                print("Gemini patched:", m, r.status_code)
+                last = r
+                if r.status_code in (400, 401, 403):
+                    return r
+            except requests.exceptions.RequestException as e:
+                print("Gemini patched exception:", m, e)
+        time.sleep(10 * (attempt + 1))
+    if last is not None:
+        return last
+    raise RuntimeError("Gemini unavailable after all retries")
+
+requests.post = _patched_post
+# ---- patch end ----
 from PIL import Image, ImageDraw, ImageFont
 
 W, H, FPS = 1080, 1920, 30
